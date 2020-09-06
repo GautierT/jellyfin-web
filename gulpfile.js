@@ -57,7 +57,7 @@ function serve() {
         server: {
             baseDir: './dist'
         },
-        port: 8080
+        port: process.env.PORT || 8080
     });
 
     const events = ['add', 'change'];
@@ -109,9 +109,7 @@ const pipelineJavascript = lazypipe()
     })
     .pipe(function () {
         return babel({
-            presets: [
-                ['@babel/preset-env']
-            ]
+            presets: [['@babel/preset-env']]
         });
     })
     .pipe(function () {
@@ -125,7 +123,9 @@ const pipelineJavascript = lazypipe()
     });
 
 function javascript(query) {
-    return src(typeof query !== 'function' ? query : options.javascript.query, { base: './src/' })
+    return src(typeof query !== 'function' ? query : options.javascript.query, {
+        base: './src/'
+    })
         .pipe(pipelineJavascript())
         .pipe(dest('dist/'))
         .pipe(browserSync.stream());
@@ -133,7 +133,9 @@ function javascript(query) {
 
 function apploader(standalone) {
     function task() {
-        return src(options.apploader.query, { base: './src/' })
+        return src(options.apploader.query, {
+            base: './src/'
+        })
             .pipe(gulpif(standalone, concat('scripts/apploader.js')))
             .pipe(pipelineJavascript())
             .pipe(dest('dist/'))
@@ -146,13 +148,13 @@ function apploader(standalone) {
 }
 
 function webpack() {
-    return stream(config)
-        .pipe(dest('dist/'))
-        .pipe(browserSync.stream());
+    return stream(config).pipe(dest('dist/')).pipe(browserSync.stream());
 }
 
 function css(query) {
-    return src(typeof query !== 'function' ? query : options.css.query, { base: './src/' })
+    return src(typeof query !== 'function' ? query : options.css.query, {
+        base: './src/'
+    })
         .pipe(mode.development(sourcemaps.init({ loadMaps: true })))
         .pipe(sass().on('error', sass.logError))
         .pipe(postcss())
@@ -162,41 +164,52 @@ function css(query) {
 }
 
 function html(query) {
-    return src(typeof query !== 'function' ? query : options.html.query, { base: './src/' })
+    return src(typeof query !== 'function' ? query : options.html.query, {
+        base: './src/'
+    })
         .pipe(mode.production(htmlmin({ collapseWhitespace: true })))
         .pipe(dest('dist/'))
         .pipe(browserSync.stream());
 }
 
 function images(query) {
-    return src(typeof query !== 'function' ? query : options.images.query, { base: './src/' })
+    return src(typeof query !== 'function' ? query : options.images.query, {
+        base: './src/'
+    })
         .pipe(mode.production(imagemin()))
         .pipe(dest('dist/'))
         .pipe(browserSync.stream());
 }
 
 function copy(query) {
-    return src(typeof query !== 'function' ? query : options.copy.query, { base: './src/' })
+    return src(typeof query !== 'function' ? query : options.copy.query, {
+        base: './src/'
+    })
         .pipe(dest('dist/'))
         .pipe(browserSync.stream());
 }
 
 function injectBundle() {
-    return src(options.injectBundle.query, { base: './src/' })
-        .pipe(inject(
-            src(['src/scripts/apploader.js'], { read: false }, { base: './src/' }), {
+    return src(options.injectBundle.query, {
+        base: './src/'
+    })
+        .pipe(
+            inject(src(['src/scripts/apploader.js'], { read: false }, { base: './src/' }), {
                 relative: true,
                 transform: function (filepath) {
                     return `<script src="${filepath}" defer></script>`;
                 }
-            }
-        ))
+            })
+        )
         .pipe(dest('dist/'))
         .pipe(browserSync.stream());
 }
 
 function build(standalone) {
-    return series(clean, parallel(javascript, apploader(standalone), webpack, css, html, images, copy));
+    return series(
+        clean,
+        parallel(javascript, apploader(standalone), webpack, css, html, images, copy)
+    );
 }
 
 exports.default = series(build(false), injectBundle);
