@@ -52,6 +52,15 @@ const options = {
     }
 };
 
+function simpleServe() {
+    browserSync.init({
+        server: {
+            baseDir: './dist'
+        },
+        port: process.env.PORT || 8080
+    });
+}
+
 function serve() {
     browserSync.init({
         server: {
@@ -215,3 +224,4 @@ function build(standalone) {
 exports.default = series(build(false), injectBundle);
 exports.standalone = series(build(true), injectBundle);
 exports.serve = series(exports.standalone, serve);
+exports.simpleServe = simpleServe;
